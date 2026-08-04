@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Из мухи в слона</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="app">
+    <header>
+      <h1>Из мухи в слона</h1>
+      <p class="tagline">Сливай одинаковых зверят — вырасти огромного слона!</p>
+    </header>
+
+    <div class="hud">
+      <div class="score-box">
+        <span class="label">Счёт</span>
+        <span class="value" id="score">0</span>
+      </div>
+      <div class="score-box">
+        <span class="label">Рекорд</span>
+        <span class="value" id="best">0</span>
+      </div>
+      <button class="btn-restart" id="restartBtn">Заново</button>
+      <button class="btn-sound" id="soundBtn" aria-label="Выключить звук">🔊</button>
+    </div>
+
+    <div class="trail-wrap">
+      <div class="trail" id="trail"></div>
+    </div>
+
+    <div class="board-wrap">
+      <div class="board" id="board">
+        <div class="cell-grid" id="cellGrid"></div>
+        <div class="tiles-layer" id="tilesLayer"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <img id="modalImg" src="" alt="">
+      <h2 id="modalTitle">Игра окончена</h2>
+      <p id="modalText">Счёт: 0</p>
+      <div class="btn-row" id="modalBtns">
+        <button class="btn-secondary" id="modalClose">Закрыть</button>
+        <button class="btn-restart" id="modalRestart">Заново</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Порядок важен: каждый файл — самостоятельный модуль движка -->
+  <script src="js/tiers.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
