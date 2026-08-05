@@ -3,14 +3,72 @@
  * Управляет счётом, рекордом, лентой эволюции и модальными окнами
  * (победа / игра окончена). Не содержит игровой логики.
  */
+
+/** Шутливые фразы, показываемые в окне поражения — каждый раз случайная. */
+const GAME_OVER_JOKES = [
+  'Муха оказалась сильнее слона 🪰💪',
+  'Слон почесал затылок и ушёл домой 🐘🤷',
+  'Кажется, звери устали сливаться 😅',
+  'Ничего, в следующий раз точно будет слон! 🐘✨',
+  'Поле было против тебя, а не ты против поля 😏',
+  'Даже кузнечик допрыгал бы дальше 🦗',
+  'Твои звери разбежались по домам 🏃💨',
+  'Это была разминка. Теперь по-серьёзному! 🔥',
+  'Муравьи снова победили систему 🐜👑',
+  'Слон передаёт привет из следующей попытки 🐘👋',
+  'Ой... звери не захотели дружить сегодня 🙈',
+  'Поле забито под завязку, как рюкзак перед отпуском 🎒😂',
+  'Не расстраивайся — даже бегемоту иногда тесно 🦛',
+  'Зебра посмотрела на это и покачала головой 🦓😅',
+  'Ещё чуть-чуть — и было бы величие 🐘🌟',
+];
+
+function randomGameOverJoke() {
+  return GAME_OVER_JOKES[Math.floor(Math.random() * GAME_OVER_JOKES.length)];
+}
+
+/**
+ * Подменяет эмодзи-символы внутри элемента на картинки (Twemoji), чтобы
+ * они выглядели одинаково на любом устройстве, а не зависели от того,
+ * есть ли на нём цветной эмодзи-шрифт. Если библиотека не загрузилась
+ * (например, нет интернета), просто оставляем обычный текстовый символ —
+ * не критично, страница не ломается.
+ */
+function applyEmoji(el) {
+  if (window.twemoji && el) {
+    window.twemoji.parse(el, {
+      base: 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/',
+      folder: 'svg',
+      ext: '.svg',
+    });
+  }
+}
+
+/**
+ * Подгружает библиотеку Twemoji асинхронно, в фоне — игра не ждёт её и
+ * стартует сразу же. Как только (и если) библиотека загрузится, заново
+ * применяет её ко всем местам, где могут быть эмодзи. Если загрузить не
+ * получилось (нет интернета) — просто остаются обычные текстовые эмодзи,
+ * игра при этом не тормозит и не ломается.
+ */
+function loadTwemojiAsync(onReady) {
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js';
+  script.crossOrigin = 'anonymous';
+  script.async = true;
+  script.onload = () => onReady && onReady();
+  document.head.appendChild(script);
+}
+
 class UIController {
-  constructor({ scoreEl, bestEl, trailEl, overlayEl, modalImg, modalTitle, modalText, modalBtns }) {
+  constructor({ scoreEl, bestEl, trailEl, overlayEl, modalImg, modalTitle, modalJoke, modalText, modalBtns }) {
     this.scoreEl = scoreEl;
     this.bestEl = bestEl;
     this.trailEl = trailEl;
     this.overlayEl = overlayEl;
     this.modalImg = modalImg;
     this.modalTitle = modalTitle;
+    this.modalJoke = modalJoke;
     this.modalText = modalText;
     this.modalBtns = modalBtns;
     this._buildTrail();
@@ -57,6 +115,7 @@ class UIController {
   showWin(score, onContinue, onRestart) {
     this.modalImg.src = tierSpritePath(MAX_TIER);
     this.modalTitle.textContent = 'Ура! Огромный слон!';
+    this.modalJoke.textContent = '';
     this.modalText.textContent =
       'Ты прошёл весь путь от мухи до слона. Счёт: ' + score.toLocaleString('ru-RU');
     this.modalBtns.innerHTML = '';
@@ -79,6 +138,8 @@ class UIController {
   showGameOver(topTier, score, isNewBest, onClose, onRestart) {
     this.modalImg.src = tierSpritePath(topTier);
     this.modalTitle.textContent = 'Игра окончена';
+    this.modalJoke.textContent = randomGameOverJoke();
+    applyEmoji(this.modalJoke);
     this.modalText.textContent =
       'Счёт: ' + score.toLocaleString('ru-RU') + (isNewBest ? ' — новый рекорд!' : '');
     this.modalBtns.innerHTML = '';

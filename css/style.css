@@ -10,6 +10,11 @@
   --card: #FFFCF6;
   --pad: 10px;
   --gap: 10px;
+  /* Явный фолбэк на системные цветные эмодзи-шрифты. Без него некоторые
+     браузеры/ОС не всегда надёжно подхватывают эмодзи-глифы для кастомных
+     веб-шрифтов (у Fredoka/Nunito эмодзи не предусмотрены) и вместо
+     эмодзи показывают пустой квадрат/кружок-заглушку. */
+  --emoji-fonts: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 * { box-sizing: border-box; }
@@ -21,7 +26,7 @@ body {
     radial-gradient(60% 50% at 15% 8%, rgba(255, 139, 94, 0.16), transparent 60%),
     radial-gradient(55% 45% at 90% 12%, rgba(69, 180, 160, 0.16), transparent 60%),
     linear-gradient(160deg, var(--cream-1), var(--cream-2) 85%);
-  font-family: 'Nunito', sans-serif;
+  font-family: 'Nunito', sans-serif, var(--emoji-fonts);
   color: var(--ink);
   display: flex;
   justify-content: center;
@@ -48,7 +53,7 @@ body {
 
 header { text-align: center; margin-bottom: 14px; }
 h1 {
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Fredoka', sans-serif, var(--emoji-fonts);
   font-weight: 700;
   font-size: clamp(28px, 7.5vw, 38px);
   margin: 0 0 4px;
@@ -71,7 +76,7 @@ h1 {
 }
 .score-box .label {
   display: block;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Fredoka', sans-serif, var(--emoji-fonts);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.6px;
@@ -80,7 +85,7 @@ h1 {
 }
 .score-box .value {
   display: block;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Fredoka', sans-serif, var(--emoji-fonts);
   font-size: 22px;
   font-weight: 600;
   color: var(--ink);
@@ -89,7 +94,7 @@ h1 {
 .score-box .value.bump { transform: scale(1.18); }
 
 .btn-restart {
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Fredoka', sans-serif, var(--emoji-fonts);
   font-weight: 600;
   font-size: 14px;
   border: none;
@@ -203,7 +208,7 @@ h1 {
 }
 .tile img { width: 62%; height: 62%; object-fit: contain; filter: drop-shadow(0 3px 3px rgba(74, 55, 40, 0.25)); pointer-events: none; }
 .tile .tname {
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Fredoka', sans-serif, var(--emoji-fonts);
   font-size: 10.5px;
   font-weight: 600;
   color: var(--ink);
@@ -267,13 +272,14 @@ h1 {
 }
 .overlay.show .modal { transform: scale(1); }
 .modal img { width: 112px; height: 112px; object-fit: contain; filter: drop-shadow(0 6px 8px rgba(74, 55, 40, 0.25)); margin-bottom: 6px; }
-.modal h2 { font-family: 'Fredoka', sans-serif; font-size: 24px; margin: 6px 0 4px; color: var(--ink); }
+.modal h2 { font-family: 'Fredoka', sans-serif, var(--emoji-fonts); font-size: 24px; margin: 6px 0 4px; color: var(--ink); }
+.modal-joke { margin: 0 0 6px; color: var(--coral-dark); font-weight: 700; font-size: 15px; }
 .modal p { margin: 0 0 18px; color: var(--ink-soft); font-weight: 600; font-size: 14px; }
 .modal .btn-row { display: flex; gap: 10px; }
 .modal .btn-row button { flex: 1; }
 
 .btn-secondary {
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Fredoka', sans-serif, var(--emoji-fonts);
   font-weight: 600;
   font-size: 14px;
   border: none;
@@ -289,4 +295,13 @@ h1 {
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* Картинки-эмодзи от Twemoji — вписываем в высоту строки текста */
+img.emoji {
+  height: 1em;
+  width: 1em;
+  margin: 0 0.05em 0 0.1em;
+  vertical-align: -0.15em;
+  display: inline-block;
 }

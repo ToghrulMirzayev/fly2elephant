@@ -24,6 +24,7 @@
     overlayEl: document.getElementById('overlay'),
     modalImg: document.getElementById('modalImg'),
     modalTitle: document.getElementById('modalTitle'),
+    modalJoke: document.getElementById('modalJoke'),
     modalText: document.getElementById('modalText'),
     modalBtns: document.getElementById('modalBtns'),
   });
@@ -121,6 +122,7 @@
   function refreshSoundIcon() {
     soundBtn.textContent = audio.enabled ? '🔊' : '🔇';
     soundBtn.setAttribute('aria-label', audio.enabled ? 'Выключить звук' : 'Включить звук');
+    applyEmoji(soundBtn);
   }
   soundBtn.addEventListener('click', () => {
     audio.toggle();
@@ -137,4 +139,12 @@
   // Первичная отрисовка
   refreshHud(false);
   renderFullBoard(true);
+  applyEmoji(document.querySelector('header'));
+
+  // Twemoji грузится в фоне и не блокирует старт игры; когда будет готова —
+  // подменяет эмодзи там, где они уже на странице (заголовок, кнопка звука).
+  loadTwemojiAsync(() => {
+    applyEmoji(document.querySelector('header'));
+    applyEmoji(soundBtn);
+  });
 })();
