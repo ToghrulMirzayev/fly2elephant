@@ -4,6 +4,20 @@
  * и связывает их вместе. Здесь же — основной игровой цикл хода.
  */
 (function () {
+  const tg = window.Telegram?.WebApp;
+
+  if (tg) {
+    tg.ready();
+    tg.expand();
+
+    if (typeof tg.disableVerticalSwipes === 'function') {
+      tg.disableVerticalSwipes();
+    }
+
+    if (typeof tg.enableClosingConfirmation === 'function') {
+      tg.enableClosingConfirmation();
+    }
+  }
   const SIZE = 4;
   const PAD = 10;
   const GAP = 10;
