@@ -114,11 +114,28 @@
       }
 
       setTimeout(() => {
-        // 3. Новая плитка появляется на свободной клетке.
-        if (result.spawned) {
+        // 3. Новая плитка появляется на свободной клетке — если только она
+        //    сама не оказалась той самой мелочью, которую в этот же ход
+        //    уберёт детский режим (тогда просто не создаём её на экране).
+        const spawnedId = result.spawned && result.spawned.tile.id;
+        const spawnedWasCleared = result.cleared.some((cl) => cl.id === spawnedId);
+        if (result.spawned && !spawnedWasCleared) {
           renderer.createTile(result.spawned.tile, result.spawned.r, result.spawned.c, { animateSpawn: true });
         }
         animating = false;
+
+        // 3б. Детский режим: если ходов больше не было, вместо поражения
+        // с поля исчезают самые маленькие животные, освобождая место.
+        if (result.cleared.length > 0) {
+          setTimeout(() => {
+            result.cleared.forEach((cl) => {
+              if (cl.id === spawnedId) return;
+              renderer.vanishTile(cl.id);
+              renderer.spawnParticles(cl.r, cl.c, tierBand(cl.tier));
+            });
+            audio.playSlide();
+          }, 180);
+        }
 
         if (result.over) {
           setTimeout(() => {
@@ -153,6 +170,17 @@
   });
   refreshSoundIcon();
 
+  // Детский режим: сохранённая настройка применяется сразу к движку,
+  // переключатель меняет её на лету и запоминает выбор.
+  const kidsCheckbox = document.getElementById('kidsCheckbox');
+  const initialKidsMode = Storage.getKidsMode();
+  kidsCheckbox.checked = initialKidsMode;
+  engine.setKidsMode(initialKidsMode);
+  kidsCheckbox.addEventListener('change', () => {
+    engine.setKidsMode(kidsCheckbox.checked);
+    Storage.setKidsMode(kidsCheckbox.checked);
+  });
+
   let resizeTimer;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
@@ -163,11 +191,13 @@
   refreshHud(false);
   renderFullBoard(true);
   applyEmoji(document.querySelector('header'));
+  applyEmoji(document.getElementById('kidsToggle'));
 
   // Twemoji грузится в фоне и не блокирует старт игры; когда будет готова —
   // подменяет эмодзи там, где они уже на странице (заголовок, кнопка звука).
   loadTwemojiAsync(() => {
     applyEmoji(document.querySelector('header'));
     applyEmoji(soundBtn);
+    applyEmoji(document.getElementById('kidsToggle'));
   });
 })();

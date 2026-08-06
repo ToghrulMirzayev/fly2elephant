@@ -125,6 +125,66 @@ h1 {
 .btn-sound:active { transform: translateY(2px); }
 .btn-sound:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
 
+/* Переключатель детского режима */
+.kids-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 rgba(74, 55, 40, 0.06), 0 6px 14px rgba(74, 55, 40, 0.06);
+  user-select: none;
+}
+.kids-toggle-checkbox {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  padding: 0;
+}
+.kids-toggle-switch {
+  flex-shrink: 0;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: #E3D5BC;
+  position: relative;
+  transition: background 0.2s ease;
+}
+.kids-toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(74, 55, 40, 0.3);
+  transition: transform 0.2s ease;
+}
+.kids-toggle-checkbox:checked ~ .kids-toggle-switch {
+  background: var(--teal);
+}
+.kids-toggle-checkbox:checked ~ .kids-toggle-switch::after {
+  transform: translateX(18px);
+}
+.kids-toggle-checkbox:focus-visible ~ .kids-toggle-switch {
+  outline: 3px solid var(--teal);
+  outline-offset: 2px;
+}
+.kids-toggle-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
 /* Лента эволюции — весь путь от мухи до слона, с подсветкой прогресса */
 .trail-wrap {
   width: 100%;

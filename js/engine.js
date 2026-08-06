@@ -11,7 +11,17 @@ class GameEngine {
   constructor(size = 4, maxTier = MAX_TIER) {
     this.size = size;
     this.maxTier = maxTier;
+    this.kidsMode = false; // включается/выключается отдельно, reset() это не трогает
     this.reset();
+  }
+
+  /**
+   * Детский режим: проиграть нельзя. Если ходов больше не осталось,
+   * вместо экрана поражения с поля убираются самые маленькие животные,
+   * освобождая место для игры дальше — см. _clearSpaceForKidsMode().
+   */
+  setKidsMode(value) {
+    this.kidsMode = !!value;
   }
 
   reset() {
@@ -205,6 +215,13 @@ class GameEngine {
     const spawned = this.spawnRandomTile();
     this.over = !this._hasMoves();
 
+    // Детский режим: вместо поражения — освобождаем место на поле.
+    let cleared = [];
+    if (this.over && this.kidsMode) {
+      cleared = this._clearSpaceForKidsMode();
+      this.over = !this._hasMoves();
+    }
+
     return {
       moved: true,
       merges: allMerges,
@@ -213,11 +230,43 @@ class GameEngine {
       scoreGained,
       graduated,
       spawned,
+      cleared,
       over: this.over,
       won: this.won,
       score: this.score,
       maxTierReached: this.maxTierReached,
     };
+  }
+
+  /**
+   * Убирает с поля все плитки самого маленького из присутствующих
+   * уровней — освобождает место, чтобы игра могла продолжаться, вместо
+   * того чтобы заканчиваться поражением. Используется только в детском
+   * режиме. Всегда освобождает хотя бы одну клетку (раз ходов не было,
+   * значит поле было заполнено целиком, и убираемый уровень на нём
+   * точно присутствует).
+   */
+  _clearSpaceForKidsMode() {
+    let lowest = null;
+    for (let r = 0; r < this.size; r++) {
+      for (let c = 0; c < this.size; c++) {
+        const tile = this.board[r][c];
+        if (tile && (lowest === null || tile.tier < lowest)) lowest = tile.tier;
+      }
+    }
+    if (lowest === null) return [];
+
+    const cleared = [];
+    for (let r = 0; r < this.size; r++) {
+      for (let c = 0; c < this.size; c++) {
+        const tile = this.board[r][c];
+        if (tile && tile.tier === lowest) {
+          cleared.push({ id: tile.id, r, c, tier: tile.tier });
+          this.board[r][c] = null;
+        }
+      }
+    }
+    return cleared;
   }
 
   /**
