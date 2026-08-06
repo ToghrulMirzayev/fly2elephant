@@ -94,6 +94,15 @@
         audio.playMerge(m.newTier);
       });
 
+      // 2б. "Осиротевшие" мелкие звери (для которых больше не будет пары)
+      // сами подрастают до текущего порога спавна — тихо, без очков и
+      // без звука слияния, лишь с лёгким визуальным эффектом.
+      result.graduated.forEach((g) => {
+        renderer.upgradeTile(g.id, g.newTier);
+        renderer.spawnParticles(g.r, g.c, tierBand(g.newTier));
+        audio.playSpawn();
+      });
+
       refreshHud(result.merges.length > 0);
 
       if (engine.won && !wonCelebrated) {

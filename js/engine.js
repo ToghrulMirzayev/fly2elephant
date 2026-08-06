@@ -51,10 +51,42 @@ class GameEngine {
   _spawnTileAt(cell, forcedTier) {
     if (!cell) return null;
     const [r, c] = cell;
-    const tier = forcedTier || (Math.random() < 0.85 ? 1 : 2);
+    const tier = forcedTier || this._rollSpawnTier();
     const tile = { id: this.nextId++, tier };
     this.board[r][c] = tile;
     return { tile, r, c };
+  }
+
+  /**
+   * Определяет минимальный уровень, который вообще может выпасть при
+   * случайном спавне — этот "пол" постепенно поднимается по мере
+   * прогресса игрока (this.maxTierReached), а не остаётся навсегда
+   * равным мухе.
+   *
+   * Без этого правила муха продолжала бы сыпаться с той же вероятностью
+   * и на 20 уровне: чтобы довести одну муху до слона, нужно 19
+   * последовательных слияний, а поле всего 4×4 — под конец игры мелкие
+   * животные превращаются в чистый мусор, который только забивает поле
+   * и не даёт закончить цепочку. Поэтому по мере продвижения игрока
+   * самые нижние (уже "отыгранные") уровни постепенно перестают
+   * появляться, освобождая место под слияния крупных животных.
+   *
+   * Специально НЕ убираем мелкие уровни всё сразу — понижение
+   * происходит плавно, по одному уровню за раз, и останавливается на
+   * уровне 8 (волк), а не идёт выше: небольшой элемент мусора и
+   * необходимость иногда "утилизировать" мелких зверей — часть
+   * челленджа, было бы слишком просто, если бы под конец спавнились
+   * только крупные звери.
+   */
+  _spawnFloor() {
+    const floor = this.maxTierReached - 7;
+    return Math.max(1, Math.min(8, floor));
+  }
+
+  _rollSpawnTier() {
+    const floor = this._spawnFloor();
+    const secondary = Math.min(floor + 1, this.maxTier);
+    return Math.random() < 0.85 ? floor : secondary;
   }
 
   /** Добавляет случайную новую плитку на свободную клетку. Возвращает {tile,r,c} или null. */
@@ -111,7 +143,7 @@ class GameEngine {
    * Выполняет ход в направлении dir ('left'|'right'|'up'|'down').
    * Возвращает подробный результат для отрисовки:
    * { moved, merges:[{survivorId,consumedId,newTier}], targetPos:{id:{r,c}},
-   *   oldPos:{id:{r,c}}, scoreGained, spawned:{tile,r,c}|null, over, won }
+   *   oldPos:{id:{r,c}}, scoreGained, graduated, spawned:{tile,r,c}|null, over, won }
    */
   move(dir) {
     const lines = this._lineCoords(dir);
@@ -163,6 +195,13 @@ class GameEngine {
     });
     this.score += scoreGained;
 
+    // Если порог спавна только что поднялся (например, впервые появилась
+    // Собака), на поле могут остаться "осиротевшие" животные ниже нового
+    // порога — для них больше никогда не заспавнится пара, и без этого
+    // правила они застревали бы на поле навсегда. Поэтому сразу же
+    // "довзрослим" их до текущего порога.
+    const graduated = this._graduateStrandedTiles();
+
     const spawned = this.spawnRandomTile();
     this.over = !this._hasMoves();
 
@@ -172,12 +211,34 @@ class GameEngine {
       targetPos,
       oldPos,
       scoreGained,
+      graduated,
       spawned,
       over: this.over,
       won: this.won,
       score: this.score,
       maxTierReached: this.maxTierReached,
     };
+  }
+
+  /**
+   * Поднимает уровень любой плитки на поле, оказавшейся ниже текущего
+   * порога спавна, до этого порога. Не влияет на счёт и на
+   * maxTierReached (это не заслуга игрока, а служебная "уборка").
+   * Возвращает список изменений для анимации на экране.
+   */
+  _graduateStrandedTiles() {
+    const floor = this._spawnFloor();
+    const changes = [];
+    for (let r = 0; r < this.size; r++) {
+      for (let c = 0; c < this.size; c++) {
+        const tile = this.board[r][c];
+        if (tile && tile.tier < floor) {
+          changes.push({ id: tile.id, r, c, oldTier: tile.tier, newTier: floor });
+          tile.tier = floor;
+        }
+      }
+    }
+    return changes;
   }
 
   _hasMoves() {
