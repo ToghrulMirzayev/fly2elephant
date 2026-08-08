@@ -10,6 +10,11 @@
   --card: #FFFCF6;
   --pad: 10px;
   --gap: 10px;
+  /* Текст ВНУТРИ тайлов — они всегда светлые (мятный/персиковый/золотой
+     градиент), независимо от темы оформления, поэтому его цвет НЕ
+     должен переопределяться темами (в отличие от --ink, который темы
+     осветляют для читаемости на тёмных карточках интерфейса). */
+  --tile-ink: #4A3728;
   /* Явный фолбэк на системные цветные эмодзи-шрифты. Без него некоторые
      браузеры/ОС не всегда надёжно подхватывают эмодзи-глифы для кастомных
      веб-шрифтов (у Fredoka/Nunito эмодзи не предусмотрены) и вместо
@@ -36,7 +41,7 @@ body {
 .app {
   width: 100%;
   max-width: 480px;
-  padding: 22px 16px 34px;
+  padding: max(22px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) calc(34px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -50,6 +55,49 @@ body {
 .blob2 { width: 220px; height: 220px; background: var(--teal); bottom: -70px; right: -80px; animation: drift2 19s ease-in-out infinite; }
 @keyframes drift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(30px, 25px); } }
 @keyframes drift2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-25px, -20px); } }
+
+/* ---- Тема Halloween: переопределяем палитру через CSS-переменные —
+   она каскадом переоформляет фон, кнопки, заголовок и т.д. ---- */
+body.theme-halloween {
+  --cream-1: #241a33;
+  --cream-2: #140d1f;
+  --ink: #f3e9ff;
+  --ink-soft: #b9a8d6;
+  --coral: #ff8a3d;
+  --coral-dark: #e56a1f;
+  --teal: #7c5cff;
+  --gold: #ffb23e;
+  --card: #2c2140;
+}
+body.theme-halloween {
+  background:
+    radial-gradient(60% 50% at 15% 8%, rgba(255, 138, 61, 0.22), transparent 60%),
+    radial-gradient(55% 45% at 90% 12%, rgba(124, 92, 255, 0.25), transparent 60%),
+    linear-gradient(160deg, var(--cream-1), var(--cream-2) 85%);
+}
+body.theme-halloween .blob1 { background: #ff8a3d; }
+body.theme-halloween .blob2 { background: #7c5cff; }
+
+/* ---- Тема Christmas: зимняя синяя палитра с красным/зелёным акцентом ---- */
+body.theme-christmas {
+  --cream-1: #16324f;
+  --cream-2: #0b1e33;
+  --ink: #eaf4ff;
+  --ink-soft: #a9c3da;
+  --coral: #e0483e;
+  --coral-dark: #b8352c;
+  --teal: #2fae7a;
+  --gold: #f0c34e;
+  --card: #1c3f5f;
+}
+body.theme-christmas {
+  background:
+    radial-gradient(60% 50% at 15% 8%, rgba(224, 72, 62, 0.18), transparent 60%),
+    radial-gradient(55% 45% at 90% 12%, rgba(47, 174, 122, 0.2), transparent 60%),
+    linear-gradient(160deg, var(--cream-1), var(--cream-2) 85%);
+}
+body.theme-christmas .blob1 { background: #e0483e; }
+body.theme-christmas .blob2 { background: #2fae7a; }
 
 header { text-align: center; margin-bottom: 14px; }
 h1 {
@@ -65,14 +113,16 @@ h1 {
 }
 .tagline { margin: 0; font-size: 14px; font-weight: 600; color: var(--ink-soft); }
 
-.hud { width: 100%; display: flex; align-items: center; gap: 10px; margin: 16px 0 12px; }
+.hud { width: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 16px 0 12px; }
 .score-box {
   flex: 1;
+  min-width: 72px;
   background: var(--card);
   border-radius: 16px;
   padding: 8px 4px;
   text-align: center;
   box-shadow: 0 4px 0 rgba(74, 55, 40, 0.08), 0 6px 14px rgba(74, 55, 40, 0.07);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 .score-box .label {
   display: block;
@@ -271,7 +321,7 @@ h1 {
   font-family: 'Fredoka', sans-serif, var(--emoji-fonts);
   font-size: 10.5px;
   font-weight: 600;
-  color: var(--ink);
+  color: var(--tile-ink);
   opacity: 0.85;
   margin-top: 1px;
   text-align: center;
@@ -345,13 +395,55 @@ h1 {
   border: none;
   cursor: pointer;
   background: #EFE3CE;
-  color: var(--ink);
+  color: var(--tile-ink);
   padding: 14px 10px;
   border-radius: 16px;
   box-shadow: 0 4px 0 #D9C7A5;
   transition: transform 0.1s ease;
 }
 .btn-secondary:active { transform: translateY(2px); box-shadow: 0 2px 0 #D9C7A5; }
+
+/* ---- Снегопад (только тема Christmas) ---- */
+.snow-layer {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 5;
+}
+.snowflake {
+  position: absolute;
+  top: -12px;
+  background: #ffffff;
+  border-radius: 50%;
+  filter: blur(0.3px);
+  animation: snow-fall linear infinite;
+  will-change: transform;
+}
+@keyframes snow-fall {
+  from { transform: translate(0, -5vh); }
+  to { transform: translate(var(--drift), 108vh); }
+}
+
+/* ---- Падающие тыквы (только тема Halloween) ---- */
+.pumpkin-layer {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 5;
+}
+.pumpkin {
+  position: absolute;
+  top: -10vh;
+  line-height: 1;
+  animation: pumpkin-fall linear infinite;
+  will-change: transform;
+}
+@keyframes pumpkin-fall {
+  from { transform: translate(0, -10vh) rotate(0deg); }
+  to { transform: translate(var(--drift), 110vh) rotate(var(--spin)); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }

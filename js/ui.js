@@ -1,7 +1,8 @@
 /**
  * ui.js
- * Управляет счётом, рекордом, лентой эволюции и модальными окнами
- * (победа / игра окончена). Не содержит игровой логики.
+ * Управляет счётом, двумя рекордами (обычный/лёгкий режим), лентой
+ * эволюции и модальными окнами (победа / поражение / смена режима).
+ * Не содержит игровой логики.
  */
 
 /** Шутливые фразы, показываемые в окне поражения — каждый раз случайная. */
@@ -25,6 +26,26 @@ const GAME_OVER_JOKES = [
 
 function randomGameOverJoke() {
   return GAME_OVER_JOKES[Math.floor(Math.random() * GAME_OVER_JOKES.length)];
+}
+
+/**
+ * Шутливые предупреждения при переключении лёгкого/обычного режима
+ * прямо во время игры — поле в этот момент обновляется, так что нужно
+ * явное подтверждение. Каждый раз случайная фраза, в тему зверей.
+ */
+const MODE_SWITCH_JOKES = [
+  'Слон уже собрал вещи и ждёт новое поле 🐘🧳 Начнём заново?',
+  'Муха машет крылом на прощание старому полю 🪰👋 Обновляем?',
+  'Зебра говорит: полосатая жизнь — это всегда заново 🦓 Погнали?',
+  'Волк воет: "Кто менял правила посреди игры?!" 🐺🌕 Продолжаем?',
+  'Бегемот моргнул — и поле уже другое 🦛😳 Готов начать сначала?',
+  'Кузнечик уже прыгнул в новый режим, ты как? 🦗 Погнали?',
+  'Собака радостно виляет хвостом: новая игра — это весело! 🐶 Начнём?',
+  'Носорог говорит: несёмся напролом в новый режим 🦏💨 Едем?',
+];
+
+function randomModeSwitchJoke() {
+  return MODE_SWITCH_JOKES[Math.floor(Math.random() * MODE_SWITCH_JOKES.length)];
 }
 
 /**
@@ -61,7 +82,10 @@ function loadTwemojiAsync(onReady) {
 }
 
 class UIController {
-  constructor({ scoreEl, bestEl, trailEl, overlayEl, modalImg, modalTitle, modalJoke, modalText, modalBtns }) {
+  constructor({
+    scoreEl, bestEl, trailEl, overlayEl,
+    modalImg, modalTitle, modalJoke, modalText, modalBtns,
+  }) {
     this.scoreEl = scoreEl;
     this.bestEl = bestEl;
     this.trailEl = trailEl;
@@ -89,6 +113,14 @@ class UIController {
     });
   }
 
+  /** Перерисовывает картинки в ленте — нужно при смене темы/набора спрайтов. */
+  refreshTrailImages() {
+    TIERS.forEach((t) => {
+      const chip = document.getElementById('trailchip-' + t.id);
+      if (chip) chip.querySelector('img').src = tierSpritePath(t.id);
+    });
+  }
+
   updateTrail(maxTierReached) {
     TIERS.forEach((t) => {
       const chip = document.getElementById('trailchip-' + t.id);
@@ -99,6 +131,11 @@ class UIController {
     if (cur) cur.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }
 
+  /**
+   * @param {number} score текущий счёт
+   * @param {number} best единый рекорд (не считает очки, набранные в
+   *   лёгком режиме — см. main.js)
+   */
   setScore(score, best, { bump = true } = {}) {
     this.scoreEl.textContent = score.toLocaleString('ru-RU');
     if (bump) {
@@ -114,6 +151,7 @@ class UIController {
 
   showWin(score, onContinue, onRestart) {
     this.modalImg.src = tierSpritePath(MAX_TIER);
+    this.modalImg.style.display = '';
     this.modalTitle.textContent = 'Ура! Огромный слон!';
     this.modalJoke.textContent = '';
     this.modalText.textContent =
@@ -137,6 +175,7 @@ class UIController {
 
   showGameOver(topTier, score, isNewBest, onClose, onRestart) {
     this.modalImg.src = tierSpritePath(topTier);
+    this.modalImg.style.display = '';
     this.modalTitle.textContent = 'Игра окончена';
     this.modalJoke.textContent = randomGameOverJoke();
     applyEmoji(this.modalJoke);
@@ -156,6 +195,35 @@ class UIController {
 
     this.modalBtns.appendChild(btnClose);
     this.modalBtns.appendChild(btnRestart);
+    this.overlayEl.classList.add('show');
+  }
+
+  /**
+   * Подтверждение смены режима (лёгкий/обычный) прямо во время игры —
+   * поле при этом обновится, так что явно предупреждаем со случайной
+   * шутливой формулировкой. onConfirm вызывается, только если игрок
+   * нажал "Да, начать заново".
+   */
+  showModeSwitchConfirm(onConfirm, onCancel) {
+    this.modalImg.style.display = 'none';
+    this.modalTitle.textContent = 'Сменить режим?';
+    this.modalJoke.textContent = randomModeSwitchJoke();
+    applyEmoji(this.modalJoke);
+    this.modalText.textContent = 'Текущее поле начнётся заново.';
+    this.modalBtns.innerHTML = '';
+
+    const btnCancel = document.createElement('button');
+    btnCancel.className = 'btn-secondary';
+    btnCancel.textContent = 'Отмена';
+    btnCancel.onclick = () => { this.hideOverlay(); onCancel && onCancel(); };
+
+    const btnConfirm = document.createElement('button');
+    btnConfirm.className = 'btn-restart';
+    btnConfirm.textContent = 'Да, начать заново';
+    btnConfirm.onclick = () => { this.hideOverlay(); onConfirm && onConfirm(); };
+
+    this.modalBtns.appendChild(btnCancel);
+    this.modalBtns.appendChild(btnConfirm);
     this.overlayEl.classList.add('show');
   }
 }

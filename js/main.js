@@ -1,9 +1,10 @@
 /**
  * main.js
- * Точка входа: создаёт движок, рендерер, интерфейс и ввод,
- * и связывает их вместе. Здесь же — основной игровой цикл хода.
+ * Точка входа: дожидается темы (config.json), создаёт движок, рендерер,
+ * интерфейс и ввод, и связывает их вместе. Здесь же — основной игровой
+ * цикл хода.
  */
-(function () {
+(async function () {
   const tg = window.Telegram?.WebApp;
 
   if (tg) {
@@ -18,6 +19,13 @@
       tg.enableClosingConfirmation();
     }
   }
+
+  // Дожидаемся config.json и применения темы ДО того, как рендерер и
+  // интерфейс начнут запрашивать пути к спрайтам — иначе первый кадр
+  // мог бы отрисоваться с обычными спрайтами и тут же "мигнуть" на
+  // сезонные.
+  await loadTheme();
+
   const SIZE = 4;
   const PAD = 10;
   const GAP = 10;
@@ -46,6 +54,7 @@
   let best = Storage.getBest();
   let animating = false;
   let wonCelebrated = false;
+  let hasPlayed = false; // хотя бы один ход сделан с последнего рестарта
 
   function renderFullBoard(animateSpawn) {
     renderer.clear();
@@ -58,7 +67,10 @@
   }
 
   function refreshHud(bump) {
-    if (engine.score > best) {
+    // Рекорд общий на всю игру, но очки, набранные в лёгком (детском)
+    // режиме — где нельзя проиграть — в зачёт не идут: иначе рекорд
+    // было бы нечестно легко "накрутить" без всякого риска.
+    if (!engine.kidsMode && engine.score > best) {
       best = engine.score;
       Storage.setBest(best);
     }
@@ -71,6 +83,7 @@
     const result = engine.move(dir);
     if (!result.moved) return;
 
+    hasPlayed = true;
     animating = true;
 
     if (result.merges.length === 0) {
@@ -151,6 +164,7 @@
   function restartGame() {
     engine.reset();
     wonCelebrated = false;
+    hasPlayed = false;
     renderFullBoard(false);
     refreshHud(false);
   }
@@ -170,15 +184,38 @@
   });
   refreshSoundIcon();
 
-  // Детский режим: сохранённая настройка применяется сразу к движку,
-  // переключатель меняет её на лету и запоминает выбор.
+  // Детский режим: сохранённая настройка применяется сразу к движку.
+  // Если игра ещё не начиналась (нечего терять) — переключатель работает
+  // сразу. Если игрок уже сделал хотя бы один ход — сначала спрашиваем
+  // подтверждение (поле обновится), и только после "Да" применяем новый
+  // режим и начинаем игру заново.
   const kidsCheckbox = document.getElementById('kidsCheckbox');
   const initialKidsMode = Storage.getKidsMode();
   kidsCheckbox.checked = initialKidsMode;
   engine.setKidsMode(initialKidsMode);
+
+  function applyKidsMode(value) {
+    engine.setKidsMode(value);
+    Storage.setKidsMode(value);
+  }
+
   kidsCheckbox.addEventListener('change', () => {
-    engine.setKidsMode(kidsCheckbox.checked);
-    Storage.setKidsMode(kidsCheckbox.checked);
+    const newValue = kidsCheckbox.checked;
+    if (!hasPlayed) {
+      applyKidsMode(newValue);
+      refreshHud(false);
+      return;
+    }
+    // откатываем визуально, пока не подтверждено в попапе
+    kidsCheckbox.checked = !newValue;
+    ui.showModeSwitchConfirm(
+      () => {
+        kidsCheckbox.checked = newValue;
+        applyKidsMode(newValue);
+        restartGame();
+      },
+      () => {}
+    );
   });
 
   let resizeTimer;
@@ -193,11 +230,17 @@
   applyEmoji(document.querySelector('header'));
   applyEmoji(document.getElementById('kidsToggle'));
 
+  // Атмосферные эффекты темы (снег на Christmas, падающие тыквы на
+  // Halloween) — чисто декоративные, не мешают игре.
+  startThemeEffects();
+
   // Twemoji грузится в фоне и не блокирует старт игры; когда будет готова —
-  // подменяет эмодзи там, где они уже на странице (заголовок, кнопка звука).
+  // подменяет эмодзи там, где они уже на странице (заголовок, кнопка звука,
+  // падающие тыквы, если активна Halloween-тема).
   loadTwemojiAsync(() => {
     applyEmoji(document.querySelector('header'));
     applyEmoji(soundBtn);
     applyEmoji(document.getElementById('kidsToggle'));
+    applyEmoji(document.getElementById('pumpkinLayer'));
   });
 })();

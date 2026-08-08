@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Из мухи в слона</title>
 <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
@@ -16,6 +16,8 @@
 <body>
   <div class="blob blob1"></div>
   <div class="blob blob2"></div>
+  <div class="snow-layer" id="snowLayer"></div>
+  <div class="pumpkin-layer" id="pumpkinLayer"></div>
   <div class="app">
     <header>
       <h1>Что, спокойно сидим? 😄</h1>
@@ -38,7 +40,7 @@
     <label class="kids-toggle" id="kidsToggle">
       <input type="checkbox" id="kidsCheckbox" class="kids-toggle-checkbox">
       <span class="kids-toggle-switch" id="kidsSwitch"></span>
-      <span class="kids-toggle-label">🧒 Детский режим — нельзя проиграть</span>
+      <span class="kids-toggle-label">🐘 Реклакс. Играй без счета и поражения</span>
     </label>
 
     <div class="trail-wrap">
@@ -70,9 +72,11 @@
 
   <!-- Порядок важен: каждый файл — самостоятельный модуль движка -->
   <script src="js/tiers.js"></script>
+  <script src="js/theme.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/audio.js"></script>
+  <script src="js/effects.js"></script>
   <script src="js/renderer.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/input.js"></script>
