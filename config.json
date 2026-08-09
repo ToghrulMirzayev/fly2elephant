@@ -1,7 +1,7 @@
 {
   "themes": {
-    "original": false,
-    "halloween": true,
+    "original": true,
+    "halloween": false,
     "christmas": false
   },
   "priority": ["original", "christmas", "halloween"]
