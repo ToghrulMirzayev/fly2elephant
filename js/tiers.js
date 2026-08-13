@@ -13,7 +13,7 @@ const TIERS = [
   { id: 7, name: 'Лиса', file: '07_fox.png' },
   { id: 8, name: 'Волк', file: '08_wolf.png' },
   { id: 9, name: 'Собака', file: '09_dog.png' },
-  { id: 10, name: 'Коза', file: '10_goat.png' },
+  { id: 10, name: 'Козлик', file: '10_goat.png' },
   { id: 11, name: 'Олень', file: '11_deer.png' },
   { id: 12, name: 'Кабан', file: '12_boar.png' },
   { id: 13, name: 'Зебра', file: '13_zebra.png' },
